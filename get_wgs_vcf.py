@@ -6,6 +6,7 @@ import os
 import click
 import pandas as pd
 import vcf
+import yaml
 
 
 class BreakpointDatabase(object):
@@ -72,7 +73,8 @@ class SvVcfData(object):
         elif any(["svaba" in str(v).lower() for v in header_infos]):
             return 'svaba'
         else:
-            raise Exception('unknown caller')
+            print('unknown caller, assuming lumpy')
+            return 'lumpy'
 
     @staticmethod
     def _get_reader(vcf_file):
@@ -262,7 +264,13 @@ class SvVcfData(object):
 
 
 def read_destruct(destruct_calls):
-    df = pd.read_csv(destruct_calls, sep='\t', dtype={'chromosome_1': str, 'chromosome_2': str})
+    if os.path.exists(destruct_calls + '.yaml'):
+        sep = yaml.safe_load(open(destruct_calls + '.yaml', 'rt'))['sep']
+    else:
+        sep = '\t'
+
+    df = pd.read_csv(destruct_calls, sep=sep, dtype={'chromosome_1': str, 'chromosome_2': str})
+
 
     colnames = [
         'prediction_id', 'chromosome_1', 'position_1', 'strand_1',
